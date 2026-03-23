@@ -1,0 +1,24 @@
+/* Pylaris Contracts — Admin CSS — Fase 2 */
+
+.pc-wrap { max-width: 1200px; }
+
+.pc-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+}
+
+.pc-badge--draft     { background: #f0f0f0; color: #555; }
+.pc-badge--pending   { background: #fff3cd; color: #856404; }
+.pc-badge--signed    { background: #d4edda; color: #155724; }
+.pc-badge--expired   { background: #f8d7da; color: #721c24; }
+.pc-badge--cancelled { background: #f1f1f1; color: #888; }
+
+.wp-list-table td { vertical-align: middle; }
+.postbox .postbox-header h2 { font-size: 14px; padding: 8px 12px; }
+.form-table th { width: 200px; }
+.large-text.code { font-family: monospace; font-size: 12px; line-height: 1.5; }
