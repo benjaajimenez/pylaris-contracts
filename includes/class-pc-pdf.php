@@ -372,11 +372,19 @@ class PC_PDF {
      * @return bool
      */
     public static function mpdf_available() {
-        return file_exists( PC_PLUGIN_DIR . 'vendor/autoload.php' )
-            && class_exists( '\Mpdf\Mpdf', false )
-               || ( file_exists( PC_PLUGIN_DIR . 'vendor/autoload.php' )
-                    && ( require_once PC_PLUGIN_DIR . 'vendor/autoload.php' )
-                    && class_exists( '\Mpdf\Mpdf' ) );
+        $autoload = PC_PLUGIN_DIR . 'vendor/autoload.php';
+
+        if ( class_exists( '\Mpdf\Mpdf', false ) ) {
+            return true;
+        }
+
+        if ( ! file_exists( $autoload ) ) {
+            return false;
+        }
+
+        require_once $autoload;
+
+        return class_exists( '\Mpdf\Mpdf', false );
     }
 
     /**
