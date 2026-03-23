@@ -18,6 +18,8 @@ class PC_Activator {
         self::create_tables();
         self::set_version();
 
+        add_filter( 'query_vars', array( __CLASS__, 'register_query_vars_for_activation' ) );
+
         // Registrar la regla de rewrite y hacer flush
         // para que /c/{token} funcione de inmediato.
         add_rewrite_rule(
@@ -31,6 +33,19 @@ class PC_Activator {
             'top'
         );
         flush_rewrite_rules();
+    }
+
+    /**
+     * Registra query vars necesarias durante la activación.
+     *
+     * @param  array $vars
+     * @return array
+     */
+    public static function register_query_vars_for_activation( $vars ) {
+        $vars[] = 'pc_contract_token';
+        $vars[] = 'pc_action';
+
+        return $vars;
     }
 
     /**

@@ -116,10 +116,39 @@ class PC_Admin_Contracts {
             return array( 'success' => false, 'message' => __( 'ID de contrato inválido.', 'pylaris-contracts' ) );
         }
 
-        $result = PC_Contracts::change_status( $contract_id, $new_status );
+        $contract_before = PC_DB::get_contract_by_id( $contract_id );
+
+        if ( ! $contract_before ) {
+            return array( 'success' => false, 'message' => __( 'Contrato no encontrado.', 'pylaris-contracts' ) );
+        }
+
+        $previous_status = $contract_before->status;
+        $result          = PC_Contracts::change_status( $contract_id, $new_status );
 
         if ( is_wp_error( $result ) ) {
             return array( 'success' => false, 'message' => $result->get_error_message() );
+        }
+
+        if ( 'pending' === $new_status && 'pending' !== $previous_status ) {
+            $mail_result = self::send_link_for_contract( $contract_id );
+
+            if ( ! $mail_result['success'] ) {
+                return array(
+                    'success' => true,
+                    'message' => sprintf(
+                        __( 'Estado actualizado correctamente, pero el email no pudo enviarse automáticamente: %s', 'pylaris-contracts' ),
+                        $mail_result['message']
+                    ),
+                );
+            }
+
+            return array(
+                'success' => true,
+                'message' => sprintf(
+                    __( 'Estado actualizado correctamente y link enviado a %s.', 'pylaris-contracts' ),
+                    $mail_result['recipient']
+                ),
+            );
         }
 
         return array( 'success' => true, 'message' => __( 'Estado actualizado correctamente.', 'pylaris-contracts' ) );
@@ -138,24 +167,50 @@ class PC_Admin_Contracts {
         PC_Security::require_admin();
         PC_Security::verify_nonce( $_POST['_wpnonce'] ?? '', PC_Security::NONCE_ADMIN_CONTRACT );
 
+        $contract_id = absint( $_POST['contract_id'] ?? 0 );
+        $result      = self::send_link_for_contract( $contract_id );
+
+        return array(
+            'success' => $result['success'],
+            'message' => $result['success']
+                ? sprintf( __( 'Link enviado a %s.', 'pylaris-contracts' ), $result['recipient'] )
+                : $result['message'],
+        );
+    }
+
+    /**
+     * Envía el link de un contrato pending al cliente.
+     *
+     * @param  int $contract_id
+     * @return array
+     */
+    private static function send_link_for_contract( $contract_id ) {
         if ( ! class_exists( 'PC_Mails' ) ) {
             require_once PC_PLUGIN_DIR . 'includes/class-pc-mails.php';
         }
 
-        $contract_id = absint( $_POST['contract_id'] ?? 0 );
-        $contract    = PC_DB::get_contract_by_id( $contract_id );
+        $contract = PC_DB::get_contract_by_id( $contract_id );
 
-        if ( ! $contract || $contract->status !== 'pending' ) {
-            return array( 'success' => false, 'message' => __( 'Contrato no disponible para envío.', 'pylaris-contracts' ) );
+        if ( ! $contract || 'pending' !== $contract->status ) {
+            return array(
+                'success' => false,
+                'message' => __( 'Contrato no disponible para envío.', 'pylaris-contracts' ),
+            );
         }
 
         $sent = PC_Mails::send_contract_link( $contract );
 
+        if ( ! $sent ) {
+            return array(
+                'success' => false,
+                'message' => __( 'Error al enviar el email. Verificá la configuración SMTP.', 'pylaris-contracts' ),
+            );
+        }
+
         return array(
-            'success' => $sent,
-            'message' => $sent
-                ? sprintf( __( 'Link enviado a %s.', 'pylaris-contracts' ), $contract->client_email )
-                : __( 'Error al enviar el email. Verificá la configuración SMTP.', 'pylaris-contracts' ),
+            'success'   => true,
+            'message'   => __( 'Link enviado correctamente.', 'pylaris-contracts' ),
+            'recipient' => $contract->client_email,
         );
     }
 

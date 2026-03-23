@@ -3,6 +3,8 @@ defined( 'ABSPATH' ) || exit;
 
 require_once PC_PLUGIN_DIR . 'admin/class-pc-admin-contracts.php';
 
+$send_link_result = null;
+
 // ¿Estamos editando un contrato existente?
 $editing     = isset( $_GET['edit'] ) && absint( $_GET['edit'] ) > 0;
 $contract_id = $editing ? absint( $_GET['edit'] ) : 0;

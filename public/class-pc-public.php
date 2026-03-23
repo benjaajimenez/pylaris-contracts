@@ -148,6 +148,12 @@ class PC_Public {
         }
 
         // Mostrar contrato
+        PC_DB::log_event( $contract->id, 'contract_viewed', array(
+            'google_email' => $session['google_email'] ?? '',
+            'google_sub'   => $session['google_sub'] ?? '',
+            'ip'           => PC_Helpers::get_client_ip(),
+        ) );
+
         $this->render_view( 'contract-view', array(
             'contract'     => $contract,
             'google_email' => $session['google_email'],
